@@ -208,6 +208,15 @@ export default function VigorIA() {
               </div>
             </div>
           </section>
+
+          {/* NOVA SEÇÃO: Assinatura do Desenvolvedor (Tema Escuro) */}
+          <div className="w-full text-center pt-8 pb-4 border-t border-[#22262a] mt-8">
+            <p className="text-xs text-[#a8abb0] font-['Inter']">
+              Idealizado e desenvolvido por <a href="https://www.linkedin.com/in/joaohenriquedasilva-agronomo/" target="_blank" rel="noopener noreferrer" className="font-bold text-[#88d982] hover:text-white transition-colors">Eng. Agr. João</a>
+            </p>
+            <p className="text-[10px] text-[#626567] mt-1">© {new Date().getFullYear()} Vigor IA. Todos os direitos reservados.</p>
+          </div>
+
         </main>
 
         <nav className="fixed bottom-0 left-0 w-full h-16 bg-[#000000]/95 backdrop-blur-md z-50 border-t border-[#22262a]">
