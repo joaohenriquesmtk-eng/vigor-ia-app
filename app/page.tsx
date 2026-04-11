@@ -31,6 +31,11 @@ export default function VigorIA() {
   const [modalPerfil, setModalPerfil] = useState(false);
   const [modalNotificacao, setModalNotificacao] = useState(false);
   
+  // Estado para o Alerta Inteligente (Geolocalização Silenciosa)
+  const [alertaIA, setAlertaIA] = useState<string | null>(null);
+  const [cidadeDetectada, setCidadeDetectada] = useState("Brasil");
+  const [loadingAlerta, setLoadingAlerta] = useState(false);
+  
   const [cultura, setCultura] = useState("Soja");
   const [estagio, setEstagio] = useState(culturasFases["Soja"][0]);
   const [regiao, setRegiao] = useState(solosBrasil[0]);
@@ -71,6 +76,34 @@ export default function VigorIA() {
     }
   };
 
+  // A MÁGICA: Buscar Localização via IP e Gerar Alerta sem pedir permissão de GPS
+  const abrirNotificacoes = async () => {
+    setModalNotificacao(true);
+    if (alertaIA) return; 
+    setLoadingAlerta(true);
+    try {
+      const respostaIP = await fetch("https://ipapi.co/json/");
+      const dadosIP = await respostaIP.json();
+      const locCidade = dadosIP.city || "Sua Região";
+      const locEstado = dadosIP.region || "Brasil";
+      setCidadeDetectada(locCidade);
+
+      const respostaIA = await fetch("/api/alertas", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cidade: locCidade, estado: locEstado }),
+      });
+      const dadosIA = await respostaIA.json();
+      
+      if (dadosIA.sucesso) setAlertaIA(dadosIA.alerta);
+      else setAlertaIA("Modelos climáticos em atualização. Mantenha o monitoramento padrão.");
+    } catch (erro) {
+      setAlertaIA("Modelos climáticos em atualização. Mantenha o monitoramento de praxe.");
+    } finally {
+      setLoadingAlerta(false);
+    }
+  };
+
   const formatarTextoLimpo = (textoOriginal: string) => {
     if (!textoOriginal) return null;
     return textoOriginal.split('\n').map((linha, index) => {
@@ -95,7 +128,6 @@ export default function VigorIA() {
 
       <div className="flex flex-col min-h-screen bg-[#0c0e10] text-[#e2e6eb] font-['Manrope',sans-serif] overflow-x-hidden selection:bg-[#88d982] selection:text-[#004c0f]">
         
-        {/* HEADER COM BOTÕES ATIVOS */}
         <header className="fixed top-0 w-full z-40 bg-[#0c0e10]/90 backdrop-blur-xl border-b border-[#22262a]">
           <div className="w-full max-w-4xl mx-auto flex items-center justify-between px-6 py-4">
             <div className="flex items-center gap-2">
@@ -103,7 +135,10 @@ export default function VigorIA() {
               <h1 className="text-xl md:text-2xl font-bold tracking-tighter text-[#e2e6eb] font-['Space_Grotesk']">Vigor IA</h1>
             </div>
             <div className="flex gap-4">
-              <span onClick={() => setModalNotificacao(true)} className="material-symbols-outlined text-[#a8abb0] hover:text-[#88d982] transition-colors cursor-pointer">notifications</span>
+              <span onClick={abrirNotificacoes} className="material-symbols-outlined text-[#a8abb0] hover:text-[#eab308] transition-colors cursor-pointer relative">
+                notifications
+                <span className="absolute top-0 right-0 w-2 h-2 bg-[#eab308] rounded-full animate-pulse"></span>
+              </span>
               <span onClick={() => setModalPerfil(true)} className="material-symbols-outlined text-[#a8abb0] hover:text-[#88d982] transition-colors cursor-pointer">account_circle</span>
             </div>
           </div>
@@ -187,18 +222,7 @@ export default function VigorIA() {
           </div>
         </main>
 
-        <nav className="fixed bottom-0 left-0 w-full h-16 bg-[#000000]/95 backdrop-blur-md z-40 border-t border-[#22262a]">
-          <div className="w-full max-w-4xl mx-auto flex justify-around items-center h-full px-4">
-            <a className="flex flex-col items-center justify-center text-[#88d982] drop-shadow-[0_0_8px_rgba(136,217,130,0.4)]" href="#">
-              <span className="material-symbols-outlined text-xl md:text-2xl">home</span>
-              <span className="text-[9px] md:text-[10px] uppercase tracking-widest mt-1 font-['Inter']">Início</span>
-            </a>
-          </div>
-        </nav>
-
-        {/* ========================================= */}
-        {/* MODAL 1: PERFIL DO ARQUITETO (O CAVALO DE TROIA) */}
-        {/* ========================================= */}
+        {/* MODAL 1: PERFIL DO ARQUITETO */}
         {modalPerfil && (
           <div className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-[#000000]/80 backdrop-blur-sm">
             <div className="bg-[#1c2023] w-full max-w-md rounded-2xl border border-[#22262a] shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
@@ -211,14 +235,11 @@ export default function VigorIA() {
               <div className="p-6 space-y-4">
                 <div className="flex justify-center mb-4">
                   <div className="w-24 h-24 rounded-full bg-[#22262a] border-2 border-[#88d982] flex items-center justify-center overflow-hidden">
-                    {/* AQUI ESTÁ A INTEGRAÇÃO DA FOTO */}
-                    {/* Para que a foto apareça: pegue uma foto sua quadrada, nomeie para perfil.jpg e coloque dentro da pasta public */}
                     <img 
                       src="/perfil.jpg" 
                       alt="João Henrique da Silva" 
                       className="w-full h-full object-cover"
                       onError={(e) => {
-                        // Se a foto não for encontrada, exibe um placeholder elegante
                         const target = e.target as HTMLImageElement;
                         target.style.display = 'none';
                         const parent = target.parentElement;
@@ -241,7 +262,7 @@ export default function VigorIA() {
                   <a href="https://www.linkedin.com/in/joaohenriquedasilva-agronomo/" target="_blank" rel="noreferrer" className="bg-[#0a66c2] text-white text-sm font-bold py-3 rounded-lg text-center hover:bg-[#004182] transition-colors flex items-center justify-center gap-2">
                     LinkedIn
                   </a>
-                  <a href="#" className="bg-[#25D366] text-white text-sm font-bold py-3 rounded-lg text-center hover:bg-[#1da851] transition-colors flex items-center justify-center gap-2">
+                  <a href="https://wa.me/5541996419950?text=Ol%C3%A1%20Jo%C3%A3o%2C%20estou%20testando%20o%20seu%20Sistema%20Vigor%20IA%20e%20gostaria%20de%20conversar." target="_blank" rel="noreferrer" className="bg-[#25D366] text-white text-sm font-bold py-3 rounded-lg text-center hover:bg-[#1da851] transition-colors flex items-center justify-center gap-2">
                     WhatsApp
                   </a>
                 </div>
@@ -250,15 +271,13 @@ export default function VigorIA() {
           </div>
         )}
 
-        {/* ========================================= */}
-        {/* MODAL 2: NOTIFICAÇÕES (BOLETIM AGRO) */}
-        {/* ========================================= */}
+        {/* MODAL 2: NOTIFICAÇÕES INTELIGENTES E DINÂMICAS */}
         {modalNotificacao && (
           <div className="fixed inset-0 z-50 flex items-center justify-center px-4 bg-[#000000]/80 backdrop-blur-sm">
             <div className="bg-[#1c2023] w-full max-w-md rounded-2xl border border-[#22262a] shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-200">
               <div className="bg-[#0c0e10] p-4 flex justify-between items-center border-b border-[#22262a]">
-                <h3 className="text-[#88d982] font-bold font-['Space_Grotesk'] flex items-center gap-2">
-                  <span className="material-symbols-outlined">campaign</span> Boletim Agro-Inteligente
+                <h3 className="text-[#eab308] font-bold font-['Space_Grotesk'] flex items-center gap-2">
+                  <span className="material-symbols-outlined">radar</span> Radar de Precisão
                 </h3>
                 <span onClick={() => setModalNotificacao(false)} className="material-symbols-outlined text-[#a8abb0] hover:text-white cursor-pointer transition-colors">close</span>
               </div>
@@ -266,11 +285,11 @@ export default function VigorIA() {
                 
                 <div className="bg-[#22262a] p-4 rounded-xl border-l-4 border-[#eab308]">
                   <div className="flex justify-between items-start mb-2">
-                    <span className="text-[#eab308] text-[10px] font-bold uppercase tracking-wider">Alerta Climático</span>
-                    <span className="text-[#a8abb0] text-[10px]">Hoje</span>
+                    <span className="text-[#eab308] text-[10px] font-bold uppercase tracking-wider">Alerta para {cidadeDetectada}</span>
+                    <span className="text-[#a8abb0] text-[10px]">Tempo Real</span>
                   </div>
-                  <p className="text-[#e2e6eb] text-sm leading-relaxed">
-                    Modelos indicam corte abrupto de chuvas no Sudoeste Goiano na primeira quinzena de maio. Recomenda-se cautela na janela de plantio da safrinha.
+                  <p className="text-[#e2e6eb] text-sm leading-relaxed whitespace-pre-wrap">
+                    {loadingAlerta ? "Mapeando satélites climáticos da sua região..." : alertaIA}
                   </p>
                 </div>
 
@@ -284,6 +303,7 @@ export default function VigorIA() {
                   </p>
                 </div>
 
+                <p className="text-[10px] text-center text-[#a8abb0] pt-2">Gerado dinamicamente por Inteligência Artificial Geo-referenciada.</p>
               </div>
             </div>
           </div>
