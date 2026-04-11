@@ -3,7 +3,7 @@
 **Acesso ao Sistema:** [vigor-ia-app.vercel.app](https://vigor-ia-app.vercel.app)
 
 ## 📌 Visão Executiva
-O **Vigor IA** é uma plataforma de diagnóstico agronômico desenvolvida para interpretar metadados de mapas multiespectrais e índices de vegetação (NDVI, NDRE, SAVI). O sistema atua como uma camada de inteligência artificial geo-referenciada, traduzindo variações de dossel e estresse hídrico em laudos técnicos e planos de ação direcionados, com foco na alta complexidade dos solos e do clima do Cerrado brasileiro.
+O **Vigor IA** é uma plataforma de diagnóstico agronômico desenvolvida para interpretar metadados de mapas multiespectrais e índices de vegetação (NDVI, NDRE, VARI, SAVI). O sistema atua como uma camada de inteligência artificial georreferenciada, traduzindo variações de dossel e estresse hídrico em laudos técnicos e planos de ação direcionados, com foco na alta complexidade dos solos e do clima brasileiro.
 
 ## 🚀 Arquitetura e Funcionalidades
 - **Calibragem Edafoclimática Dinâmica:** O algoritmo adapta a leitura da IA com base na cultura, fase fenológica específica e textura do solo (ex: Latossolos vs. Neossolos).
